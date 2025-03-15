@@ -12,7 +12,7 @@ export class ProductRepository extends IProductRepository {
 
     async getProducts() {
         try {
-            const response = await this.apiClient.get(`${this.apiHost}/v1/product`);
+            const response = await this.apiClient.get(`${this.apiHost}/v1/product/`);
             return response.data || [];
         } catch (error) {
             console.error('Error al obtener productos:', error);
@@ -23,7 +23,7 @@ export class ProductRepository extends IProductRepository {
 
     async createProduct(product) {
         try {
-            const response = await this.apiClient.post(`${this.apiHost}/v1/product`, product);
+            const response = await this.apiClient.post(`${this.apiHost}/v1/product/`, product);
             return response;
         } catch (error) {
             console.error('Error al crear producto:', error);

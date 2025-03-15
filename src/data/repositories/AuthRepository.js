@@ -2,13 +2,13 @@ import { User } from '../../core/domain/models/User';
 import { IAuthRepository } from '../../core/repositories/IAuthRepository';
 import { ApiClient } from '../services/ApiClient';
 
-
 export class AuthRepository extends IAuthRepository {
     constructor() {
         super();
         this.apiClient = new ApiClient();
         this.storageKey = 'auth_user';
         this.apiHost = process.env.REACT_APP_API_HOST || 'http://localhost:8080';
+        console.log(process.env.REACT_APP_API_HOST);
     }
 
 
@@ -19,7 +19,7 @@ export class AuthRepository extends IAuthRepository {
                 password
             };
 
-            const response = await this.apiClient.get(`${this.apiHost}/v1/client`, loginData);
+            const response = await this.apiClient.post(`${this.apiHost}/v1/client/auth`, loginData);
 
             if (response?.success && response?.data) {
                 const userData = response.data;
@@ -55,19 +55,18 @@ export class AuthRepository extends IAuthRepository {
         }
     }
 
-
     async register(name, email, password, address) {
         try {
             const requestData = {
-                name: name,
-                description: email,
-                password: password,
-                address: address
+                name,
+                email,
+                password,
+                address
             };
 
             const response = await this.apiClient.post(`${this.apiHost}/v1/client`, requestData);
 
-
+            // Después del registro exitoso, hacemos login automáticamente
             return await this.login(email, password);
         } catch (error) {
             console.error('Error during registration:', error);
@@ -87,7 +86,6 @@ export class AuthRepository extends IAuthRepository {
         }
     }
 
-
     async logout() {
         try {
             localStorage.removeItem(this.storageKey);
@@ -96,7 +94,6 @@ export class AuthRepository extends IAuthRepository {
             throw new Error('Error al cerrar sesión.');
         }
     }
-
 
     getCurrentUser() {
         const userData = localStorage.getItem(this.storageKey);
@@ -115,7 +112,6 @@ export class AuthRepository extends IAuthRepository {
             return null;
         }
     }
-
 
     isAuthenticated() {
         return !!this.getCurrentUser();
