@@ -77,9 +77,27 @@ const ProductCard = ({ product, onAddToCart, isSelected, selectedQuantity, onQua
                         label="Cantidad"
                         variant="outlined"
                         fullWidth
-                        InputProps={{ inputProps: { min: 1, max: product.stock } }}
+                        InputProps={{
+                            inputProps: {
+                                min: 1,
+                                max: product.stock
+                            }
+                        }}
                         value={selectedQuantity}
-                        onChange={(e) => onQuantityChange(parseInt(e.target.value) || 1)}
+                        // Modificación aquí para permitir borrar completamente el campo
+                        onChange={(e) => {
+                            // Si el campo está vacío, permitir que esté vacío temporalmente
+                            if (e.target.value === '') {
+                                onQuantityChange('');
+                            } else {
+                                const newValue = parseInt(e.target.value);
+                                // Validar que sea un número y esté dentro del rango permitido
+                                if (!isNaN(newValue)) {
+                                    const validQuantity = Math.min(Math.max(1, newValue), product.stock);
+                                    onQuantityChange(validQuantity);
+                                }
+                            }
+                        }}
                         size="small"
                     />
                 ) : (
@@ -186,16 +204,24 @@ export const HomePage = () => {
     };
 
     const handleQuantityChange = (newQuantity) => {
-        const maxStock = selectedProduct?.stock || 1;
-        const validQuantity = Math.min(Math.max(1, newQuantity), maxStock);
-        setQuantity(validQuantity);
+        if (newQuantity === '') {
+            setQuantity('');
+        } else {
+            const numericQuantity = parseInt(newQuantity);
+            if (!isNaN(numericQuantity)) {
+                const maxStock = selectedProduct?.stock || 1;
+                const validQuantity = Math.min(Math.max(1, numericQuantity), maxStock);
+                setQuantity(validQuantity);
+            }
+        }
     };
 
     const handlePurchase = async () => {
-        if (selectedProduct && quantity > 0) {
+        const numericQuantity = parseInt(quantity);
+        if (selectedProduct && !isNaN(numericQuantity) && numericQuantity > 0) {
             try {
                 // Calcular el precio total
-                const totalPrice = selectedProduct.price * quantity;
+                const totalPrice = selectedProduct.price * numericQuantity;
 
                 // Crear la orden usando el caso de uso
                 const clientId = user?.id || 1; // Usar ID del usuario autenticado o un valor por defecto
@@ -203,7 +229,7 @@ export const HomePage = () => {
                 const result = await createOrderUseCase.execute(
                     clientId,
                     selectedProduct.id,
-                    quantity,
+                    numericQuantity,
                     totalPrice
                 );
 
@@ -215,8 +241,7 @@ export const HomePage = () => {
                         severity: 'success'
                     });
 
-                    // Actualizar la lista de productos (idealmente deberíamos recargar desde la API)
-                    // Pero por ahora, simularemos actualizando el stock localmente
+
                     setProducts(products.map(p => {
                         if (p.id === selectedProduct.id) {
                             return {

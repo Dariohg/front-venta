@@ -8,17 +8,17 @@ export class OrderRepository extends IOrderRepository {
         this.apiHost = process.env.REACT_APP_API_HOST || 'http://localhost:8080';
     }
 
-
     async createOrder(order) {
         try {
-            const response = await this.apiClient.post(`${this.apiHost}/v1/order`, order);
+            console.log('Enviando orden:', order);
+
+            const response = await this.apiClient.post(`${this.apiHost}/v1/order/`, order);
             return response;
         } catch (error) {
             console.error('Error al crear orden:', error);
             throw error;
         }
     }
-
 
     async getOrders() {
         try {
@@ -34,13 +34,16 @@ export class OrderRepository extends IOrderRepository {
         try {
             const response = await this.apiClient.get(`${this.apiHost}/v1/order/client/${clientId}`);
 
-            // La respuesta viene en formato messages, procesamos para convertir a objetos
-            if (response.messages && Array.isArray(response.messages)) {
+            if (response.data) {
+                return response.data;
+            } else if (response.messages && Array.isArray(response.messages)) {
                 return response.messages.map(msg => {
                     try {
-                        // Extraer el JSON dentro de la cadena del mensaje
-                        const orderStr = msg.replace('Orden recibida: ', '');
-                        return JSON.parse(orderStr);
+                        if (typeof msg === 'string' && msg.includes('Orden recibida:')) {
+                            const orderStr = msg.replace('Orden recibida: ', '');
+                            return JSON.parse(orderStr);
+                        }
+                        return msg;
                     } catch (e) {
                         console.error('Error parsing order message:', e);
                         return null;
@@ -48,6 +51,7 @@ export class OrderRepository extends IOrderRepository {
                 }).filter(order => order !== null);
             }
 
+            // Si no se encuentra ningún formato reconocido, devolver array vacío
             return [];
         } catch (error) {
             console.error('Error al obtener órdenes del cliente:', error);

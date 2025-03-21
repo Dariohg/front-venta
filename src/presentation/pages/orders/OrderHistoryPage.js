@@ -58,16 +58,21 @@ export const OrderHistoryPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
+    // En src/presentation/pages/orders/OrderHistoryPage.js (fragmento relevante)
+
     const fetchOrders = async () => {
         try {
             setLoading(true);
 
             // Obtener el ID del cliente del usuario autenticado
-            const clientId = user?.Id || 1; // Usar 1 como valor predeterminado para desarrollo
+            const clientId = user?.Id || 1; // Asegúrate de que estás usando la propiedad correcta (Id con I mayúscula)
+
+            console.log("Obteniendo órdenes para el cliente ID:", clientId); // Añadir log para depuración
 
             const result = await getClientOrdersUseCase.execute(clientId);
 
             if (result.success) {
+                console.log("Órdenes obtenidas:", result.data); // Añadir log para depuración
                 setOrders(result.data);
             } else {
                 // Si hay un error, mostrar mensaje
@@ -77,33 +82,12 @@ export const OrderHistoryPage = () => {
                     severity: 'error'
                 });
 
-                // Usar datos de ejemplo para desarrollo mientras tanto
-                setOrders([
-                    {
-                        id: 11,
-                        client_id: 1,
-                        product_id: 1,
-                        quantity: 2,
-                        status: 'Pending',
-                        total_price: 21
-                    },
-                    {
-                        id: 12,
-                        client_id: 1,
-                        product_id: 1,
-                        quantity: 2,
-                        status: 'Completed',
-                        total_price: 21
-                    },
-                    {
-                        id: 13,
-                        client_id: 1,
-                        product_id: 1,
-                        quantity: 2,
-                        status: 'Pending',
-                        total_price: 21
-                    }
-                ]);
+                // Si estamos en desarrollo, usar datos de ejemplo
+                if (process.env.NODE_ENV === 'development') {
+                    setOrders([
+                        // Datos de ejemplo...
+                    ]);
+                }
             }
         } catch (error) {
             console.error('Error fetching orders:', error);

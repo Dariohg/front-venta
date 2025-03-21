@@ -1,7 +1,6 @@
 import {Order} from "../../domain/models/Order";
 
 export class CreateOrderUseCase {
-
     constructor(orderRepository) {
         this.orderRepository = orderRepository;
     }
@@ -24,7 +23,7 @@ export class CreateOrderUseCase {
                 clientId,
                 productId,
                 quantity,
-                'Pending',
+                'pending',
                 totalPrice
             );
 
