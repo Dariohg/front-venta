@@ -31,19 +31,17 @@ import { useAuth } from '../../hooks/useAuth';
 const orderRepository = new OrderRepository();
 const getClientOrdersUseCase = new GetClientOrdersUseCase(orderRepository);
 
-// Función para formatear la fecha (asumiendo que la API no devuelve fecha, pero podríamos agregarla)
 const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
     return date.toLocaleString();
 };
 
-// Mapa de colores para los estados
 const statusColors = {
-    'Pending': 'warning',
-    'Completed': 'success',
-    'Cancelled': 'error',
-    'Processing': 'info'
+    'pending': 'warning',
+    'completed': 'success',
+    'cancelled': 'error',
+    'processing': 'info'
 };
 
 export const OrderHistoryPage = () => {
@@ -58,21 +56,41 @@ export const OrderHistoryPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // En src/presentation/pages/orders/OrderHistoryPage.js (fragmento relevante)
+    // Este efecto se ejecutará cada vez que cambie el objeto user
+    useEffect(() => {
+        // Si no hay usuario autenticado, redirigir al login
+        if (!user) {
+            navigate('/login');
+            return;
+        }
+
+        fetchOrders();
+    }, [user, navigate]); // Dependencias importantes
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
 
-            // Obtener el ID del cliente del usuario autenticado
-            const clientId = user?.Id || 1; // Asegúrate de que estás usando la propiedad correcta (Id con I mayúscula)
+            // Asegurarse de usar el ID correcto del usuario actual
+            const clientId = user?.Id;
 
-            console.log("Obteniendo órdenes para el cliente ID:", clientId); // Añadir log para depuración
+            // Si no hay ID de cliente, no continuar
+            if (!clientId) {
+                setSnackbar({
+                    open: true,
+                    message: 'No se pudo identificar al usuario actual',
+                    severity: 'error'
+                });
+                setLoading(false);
+                return;
+            }
+
+            console.log("Obteniendo órdenes para el cliente ID:", clientId);
 
             const result = await getClientOrdersUseCase.execute(clientId);
 
             if (result.success) {
-                console.log("Órdenes obtenidas:", result.data); // Añadir log para depuración
+                console.log("Órdenes obtenidas:", result.data);
                 setOrders(result.data);
             } else {
                 // Si hay un error, mostrar mensaje
@@ -84,9 +102,7 @@ export const OrderHistoryPage = () => {
 
                 // Si estamos en desarrollo, usar datos de ejemplo
                 if (process.env.NODE_ENV === 'development') {
-                    setOrders([
-                        // Datos de ejemplo...
-                    ]);
+                    setOrders([]);
                 }
             }
         } catch (error) {
@@ -100,11 +116,6 @@ export const OrderHistoryPage = () => {
             setLoading(false);
         }
     };
-
-    // Cargar órdenes al montar el componente
-    useEffect(() => {
-        fetchOrders();
-    }, []);
 
     const handleRefresh = () => {
         fetchOrders();
@@ -160,7 +171,7 @@ export const OrderHistoryPage = () => {
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>Orden #</TableCell>
+                                        <TableCell>Nº</TableCell>
                                         <TableCell>Producto ID</TableCell>
                                         <TableCell>Cantidad</TableCell>
                                         <TableCell>Total</TableCell>
@@ -168,12 +179,12 @@ export const OrderHistoryPage = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {orders.map((order) => (
-                                        <TableRow key={order.id}>
-                                            <TableCell>{order.id}</TableCell>
+                                    {orders.map((order, index) => (
+                                        <TableRow key={order.id || index}>
+                                            <TableCell>{index + 1}</TableCell>
                                             <TableCell>{order.product_id}</TableCell>
                                             <TableCell>{order.quantity}</TableCell>
-                                            <TableCell>${order.total_price.toFixed(2)}</TableCell>
+                                            <TableCell>${parseFloat(order.total_price).toFixed(2)}</TableCell>
                                             <TableCell>
                                                 <Chip
                                                     label={order.status}

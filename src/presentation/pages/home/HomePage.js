@@ -17,7 +17,7 @@ import {
     MenuItem,
     Divider,
     Snackbar,
-    Alert
+    Alert,
 } from '@mui/material';
 import {
     ShoppingCart as ShoppingCartIcon,
@@ -33,6 +33,7 @@ import { OrderRepository } from '../../../data/repositories/OrderRepository';
 import { GetProductsUseCase } from '../../../core/useCases/products/GetProductsUseCase';
 import { CreateOrderUseCase } from '../../../core/useCases/orders/CreateOrderUseCase';
 import { useAuth } from '../../hooks/useAuth';
+import { LocalShipping as LocalShippingIcon } from '@mui/icons-material';
 
 // Repositorios
 const productRepository = new ProductRepository();
@@ -220,11 +221,9 @@ export const HomePage = () => {
         const numericQuantity = parseInt(quantity);
         if (selectedProduct && !isNaN(numericQuantity) && numericQuantity > 0) {
             try {
-                // Calcular el precio total
                 const totalPrice = selectedProduct.price * numericQuantity;
 
-                // Crear la orden usando el caso de uso
-                const clientId = user?.id || 1; // Usar ID del usuario autenticado o un valor por defecto
+                const clientId = user?.Id || 1;
 
                 const result = await createOrderUseCase.execute(
                     clientId,
@@ -310,6 +309,14 @@ export const HomePage = () => {
                         sx={{ mr: 2 }}
                     >
                         Mis Órdenes
+                    </Button>
+                    <Button
+                        color="inherit"
+                        startIcon={<LocalShippingIcon />}
+                        onClick={() => navigate('/delivery')}
+                        sx={{ mr: 2 }}
+                    >
+                        Panel de Entregas
                     </Button>
                     <div>
                         <IconButton
